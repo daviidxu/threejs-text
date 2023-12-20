@@ -8,7 +8,7 @@ import { TextGeometry } from "three/examples/jsm/geometries/TextGeometry.js";
  * Base
  */
 // Debug
-const gui = new GUI();
+// const gui = new GUI();
 
 // Canvas
 const canvas = document.querySelector("canvas.webgl");
@@ -23,9 +23,11 @@ const scene = new THREE.Scene();
  * Fonts
  */
 const font = new FontLoader();
+
+let text;
+
 font.load("/fonts/helvetiker_regular.typeface.json", (font) => {
-  console.log("font loaded");
-  const textGeometry = new TextGeometry("David XU", {
+  const textParameters = {
     font,
     size: 0.5,
     height: 0.2,
@@ -35,20 +37,37 @@ font.load("/fonts/helvetiker_regular.typeface.json", (font) => {
     bevelOffset: 0,
     bevelSize: 0.02,
     bevelSegments: 5,
-  });
+  };
+
+  const textGeometry = new TextGeometry("David XU", textParameters);
 
   textGeometry.center();
 
   const material = new THREE.MeshMatcapMaterial({
     matcap: matcapTexture,
   });
-  const text = new THREE.Mesh(textGeometry, material);
+
+  text = new THREE.Mesh(textGeometry, material);
+
+  // gui.add(material, "wireframe");
+  // gui.add(textGeometry, "size").min(0).max(1).step(0.01);
+  // gui
+  //   .add(textGeometry.parameters.options, "bevelSize")
+  //   .min(0)
+  //   .max(1)
+  //   .step(0.01);
+  // gui
+  //   .add(textGeometry.parameters.options, "bevelThickness")
+  //   .min(0)
+  //   .max(1)
+  //   .step(0.01);
+  // gui.add(text, "size").min(0.5).max(1).step(0.02);
 
   scene.add(text);
 
   const donutGeometry = new THREE.TorusGeometry(0.3, 0.2, 20, 45);
 
-  for (let index = 0; index < 100; index++) {
+  for (let index = 0; index < 200; index++) {
     const donut = new THREE.Mesh(donutGeometry, material);
     donut.position.x = (Math.random() - 0.5) * 10;
     donut.position.y = (Math.random() - 0.5) * 10;
@@ -66,16 +85,16 @@ font.load("/fonts/helvetiker_regular.typeface.json", (font) => {
  * Textures
  */
 const textureLoader = new THREE.TextureLoader();
-const matcapTexture = textureLoader.load("/textures/matcaps/1.png");
+const matcapTexture = textureLoader.load("/textures/matcaps/8.png");
 matcapTexture.colorSpace = THREE.SRGBColorSpace;
 
 /**
  * Object
  */
-const cube = new THREE.Mesh(
-  new THREE.BoxGeometry(1, 1, 1),
-  new THREE.MeshBasicMaterial()
-);
+// const cube = new THREE.Mesh(
+//   new THREE.BoxGeometry(1, 1, 1),
+//   new THREE.MeshBasicMaterial()
+// );
 
 // scene.add(cube);
 
@@ -111,14 +130,26 @@ const camera = new THREE.PerspectiveCamera(
   0.1,
   100
 );
-camera.position.x = 1;
-camera.position.y = 1;
-camera.position.z = 2;
+camera.position.x = 0;
+camera.position.y = 0;
+camera.position.z = 3;
 scene.add(camera);
 
 // Controls
-const controls = new OrbitControls(camera, canvas);
-controls.enableDamping = true;
+// const controls = new OrbitControls(camera, canvas);
+// controls.enableDamping = true;
+// controls.maxZoom = 2;
+// controls.minZoom = 1;
+
+const cursor = {
+  x: 0,
+  y: 0,
+};
+
+window.addEventListener("mousemove", (e) => {
+  cursor.x = e.clientX / sizes.width - 0.5;
+  cursor.y = -(e.clientY / sizes.height - 0.5);
+});
 
 /**
  * Renderer
@@ -138,7 +169,14 @@ const tick = () => {
   const elapsedTime = clock.getElapsedTime();
 
   // Update controls
-  controls.update();
+  // controls.update();
+
+  camera.position.x = cursor.x * 5;
+  camera.position.y = cursor.y * 5;
+  if (text) {
+    text.rotation.y = cursor.x * 3;
+    text.rotation.x = cursor.y * 3;
+  }
 
   // Render
   renderer.render(scene, camera);
